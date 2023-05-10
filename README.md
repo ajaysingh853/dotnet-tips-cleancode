@@ -12,6 +12,7 @@ Say hi on [Twitter](https://twitter.com/ajaysingh853)!
 - [.NET Clean Code](#net-clean-code)
   - [Naming](#naming)
   - [Variables](#variables)
+  - [Functions](#functions)
   - [Formatting](#formatting)
   - [Comments](#comments)
 - [Other Resources](#other-resources)
@@ -673,6 +674,856 @@ public void CreateMicrobrewery(string breweryName = "XYZ Tech Co.")
 {
     // ...
 }
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Functions
+
+<details>
+  <summary><b>Avoid side effects</b></summary>
+
+A function produces a side effect if it does anything other than take a value in and return another value or values. A side effect could be writing to a file, modifying some global variable, or accidentally wiring all your money to a stranger.
+
+Now, you do need to have side effects in a program on occasion. Like the previous example, you might need to write to a file. What you want to do is to centralize where you are doing this. Don't have several functions and classes that write to a particular file. Have one service that does it. One and only one.
+
+The main point is to avoid common pitfalls like sharing state between objects without any structure, using mutable data types that can be written to by anything, and not centralizing where your side effects occur. If you can do this, you will be happier
+than the vast majority of other programmers.
+
+❌ **Bad:**
+
+```csharp
+// Global variable referenced by following function.
+// If we had another function that used this name, now it'd be an array and it could break it.
+var name = "Tonny Stark";
+
+public void SplitAndEnrichFullName()
+{
+    var temp = name.Split(" ");
+    name = $"His first name is {temp[0]}, and his last name is {temp[1]}"; // side effect
+}
+
+SplitAndEnrichFullName();
+
+Console.WriteLine(name); // His first name is Tonny, and his last name is Stark
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public string SplitAndEnrichFullName(string name)
+{
+    var temp = name.Split(" ");
+    return $"His first name is {temp[0]}, and his last name is {temp[1]}";
+}
+
+var name = "Tonny Stark";
+var fullName = SplitAndEnrichFullName(name);
+
+Console.WriteLine(name); // Tonny Stark
+Console.WriteLine(fullName); // His first name is Tonny, and his last name is Stark
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Avoid negative conditionals</b></summary>
+
+❌ **Bad:**
+
+```csharp
+public bool IsDOMNodeNotPresent(string node)
+{
+    // ...
+}
+
+if (!IsDOMNodeNotPresent(node))
+{
+    // ...
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public bool IsDOMNodePresent(string node)
+{
+    // ...
+}
+
+if (IsDOMNodePresent(node))
+{
+    // ...
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Avoid conditionals</b></summary>
+
+This seems like an impossible task. Upon first hearing this, most people say, "how am I supposed to do anything without an `if` statement?" The answer is that you can use polymorphism to achieve the same task in many cases. The second question is usually, "well that's great but why would I want to do that?" The answer is a previous clean code concept we learned: a function should only do
+one thing. When you have classes and functions that have `if` statements, you are telling your user that your function does more than one thing. Remember, just do one thing.
+
+❌ **Bad:**
+
+```csharp
+class Airplane
+{
+    // ...
+
+    public double GetCruisingAltitude()
+    {
+        switch (_type)
+        {
+            case '777':
+                return GetMaxAltitude() - GetPassengerCount();
+            case 'Air Force One':
+                return GetMaxAltitude();
+            case 'Cessna':
+                return GetMaxAltitude() - GetFuelExpenditure();
+        }
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+interface IAirplane
+{
+    // ...
+
+    double GetCruisingAltitude();
+}
+
+class Boeing777 : IAirplane
+{
+    // ...
+
+    public double GetCruisingAltitude()
+    {
+        return GetMaxAltitude() - GetPassengerCount();
+    }
+}
+
+class AirForceOne : IAirplane
+{
+    // ...
+
+    public double GetCruisingAltitude()
+    {
+        return GetMaxAltitude();
+    }
+}
+
+class Cessna : IAirplane
+{
+    // ...
+
+    public double GetCruisingAltitude()
+    {
+        return GetMaxAltitude() - GetFuelExpenditure();
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Avoid type-checking (part 1)</b></summary>
+
+❌ **Bad:**
+
+```csharp
+public Path TravelToDelhi(object vehicle)
+{
+    if (vehicle.GetType() == typeof(Bicycle))
+    {
+        (vehicle as Bicycle).PeddleTo(new Location("delhi"));
+    }
+    else if (vehicle.GetType() == typeof(Car))
+    {
+        (vehicle as Car).DriveTo(new Location("delhi"));
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public Path TravelToDelhi(Traveler vehicle)
+{
+    vehicle.TravelTo(new Location("delhi"));
+}
+```
+
+or
+
+```csharp
+// pattern matching
+public Path TravelToDelhi(object vehicle)
+{
+    if (vehicle is Bicycle bicycle)
+    {
+        bicycle.PeddleTo(new Location("delhi"));
+    }
+    else if (vehicle is Car car)
+    {
+        car.DriveTo(new Location("delhi"));
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Avoid type-checking (part 2)</b></summary>
+
+❌ **Bad:**
+
+```csharp
+public int Combine(dynamic val1, dynamic val2)
+{
+    int value;
+    if (!int.TryParse(val1, out value) || !int.TryParse(val2, out value))
+    {
+        throw new Exception('Must be of type Number');
+    }
+
+    return val1 + val2;
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public int Combine(int val1, int val2)
+{
+    return val1 + val2;
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Avoid flags in method parameters</b></summary>
+
+A flag indicates that the method has more than one responsibility. It is best if the method only has a single responsibility. Split the method into two if a boolean parameter adds multiple responsibilities to the method.
+
+❌ **Bad:**
+
+```csharp
+public void CreateFile(string name, bool temp = false)
+{
+    if (temp)
+    {
+        Touch("./temp/" + name);
+    }
+    else
+    {
+        Touch(name);
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public void CreateFile(string name)
+{
+    Touch(name);
+}
+
+public void CreateTempFile(string name)
+{
+    Touch("./temp/"  + name);
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Don't write to global functions</b></summary>
+
+Polluting globals is a bad practice in many languages because you could clash with another library and the user of your API would be none-the-wiser until they get an exception in production. Let's think about an example: what if you wanted to have configuration array.
+You could write global function like `Config()`, but it could clash with another library that tried to do the same thing.
+
+❌ **Bad:**
+
+```csharp
+public Dictionary<string, string> Config()
+{
+    return new Dictionary<string,string>(){
+        ["foo"] = "bar"
+    };
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class Configuration
+{
+    private Dictionary<string, string> _configuration;
+
+    public Configuration(Dictionary<string, string> configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public string[] Get(string key)
+    {
+        return _configuration.ContainsKey(key) ? _configuration[key] : null;
+    }
+}
+```
+
+Load configuration and create instance of `Configuration` class
+
+```csharp
+var configuration = new Configuration(new Dictionary<string, string>() {
+    ["foo"] = "bar"
+});
+```
+
+And now you must use instance of `Configuration` in your application.
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Don't use a Singleton pattern</b></summary>
+
+Singleton is an [anti-pattern](https://en.wikipedia.org/wiki/Singleton_pattern). Paraphrased from Brian Button:
+
+1. They are generally used as a **global instance**, why is that so bad? Because **you hide the dependencies** of your application in your code, instead of exposing them through the interfaces. Making something global to avoid passing it around is a [code smell](https://en.wikipedia.org/wiki/Code_smell).
+2. They violate the [single responsibility principle](#single-responsibility-principle-srp): by virtue of the fact that **they control their own creation and lifecycle**.
+3. They inherently cause code to be tightly [coupled](https://en.wikipedia.org/wiki/Coupling_%28computer_programming%29). This makes faking them out under **test rather difficult** in many cases.
+4. They carry state around for the lifetime of the application. Another hit to testing since **you can end up with a situation where tests need to be ordered** which is a big no for unit tests. Why? Because each unit test should be independent from the other.
+
+There is also very good thoughts by [Misko Hevery](http://misko.hevery.com/about/) about the [root of problem](http://misko.hevery.com/2008/08/25/root-cause-of-singletons/).
+
+❌ **Bad:**
+
+```csharp
+class DBConnection
+{
+    private static DBConnection _instance;
+
+    private DBConnection()
+    {
+        // ...
+    }
+
+    public static GetInstance()
+    {
+        if (_instance == null)
+        {
+            _instance = new DBConnection();
+        }
+
+        return _instance;
+    }
+
+    // ...
+}
+
+var singleton = DBConnection.GetInstance();
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class DBConnection
+{
+    public DBConnection(IOptions<DbConnectionOption> options)
+    {
+        // ...
+    }
+
+    // ...
+}
+```
+
+Create instance of `DBConnection` class and configure it with [Option pattern](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-2.1).
+
+```csharp
+var options = <resolve from IOC>;
+var connection = new DBConnection(options);
+```
+
+And now you must use instance of `DBConnection` in your application.
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Function arguments (2 or fewer ideally)</b></summary>
+
+Limiting the amount of function parameters is incredibly important because it makes testing your function easier. Having more than three leads to a combinatorial explosion where you have to test tons of different cases with each separate argument.
+
+Zero arguments is the ideal case. One or two arguments is ok, and three should be avoided. Anything more than that should be consolidated. Usually, if you have more than two arguments then your function is trying to do too much. In cases where it's not, most of the time a higher-level object will suffice as an argument.
+
+❌ **Bad:**
+
+```csharp
+public void CreateMenu(string title, string body, string buttonText, bool cancellable)
+{
+    // ...
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public class MenuConfig
+{
+    public string Title { get; set; }
+    public string Body { get; set; }
+    public string ButtonText { get; set; }
+    public bool Cancellable { get; set; }
+}
+
+var config = new MenuConfig
+{
+    Title = "Foo",
+    Body = "Bar",
+    ButtonText = "Baz",
+    Cancellable = true
+};
+
+public void CreateMenu(MenuConfig config)
+{
+    // ...
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Functions should do one thing</b></summary>
+
+This is by far the most important rule in software engineering. When functions do more than one thing, they are harder to compose, test, and reason about. When you can isolate a function to just one action, they can be refactored easily and your code will read much
+cleaner. If you take nothing else away from this guide other than this, you'll be ahead of many developers.
+
+❌ **Bad:**
+
+```csharp
+public void SendEmailToListOfClients(string[] clients)
+{
+    foreach (var client in clients)
+    {
+        var clientRecord = db.Find(client);
+        if (clientRecord.IsActive())
+        {
+            Email(client);
+        }
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public void SendEmailToListOfClients(string[] clients)
+{
+    var activeClients = GetActiveClients(clients);
+    // Do some logic
+}
+
+public List<Client> GetActiveClients(string[] clients)
+{
+    return db.Find(clients).Where(s => s.Status == "Active");
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Function names should say what they do</b></summary>
+
+❌ **Bad:**
+
+```csharp
+public class Email
+{
+    //...
+
+    public void Handle()
+    {
+        SendMail(this._to, this._subject, this._body);
+    }
+}
+
+var message = new Email(...);
+// What is this? A handle for the message? Are we writing to a file now?
+message.Handle();
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public class Email
+{
+    //...
+
+    public void Send()
+    {
+        SendMail(this._to, this._subject, this._body);
+    }
+}
+
+var message = new Email(...);
+// Clear and obvious
+message.Send();
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Functions should only be one level of abstraction</b></summary>
+
+> Not finished yet
+
+When you have more than one level of abstraction your function is usually doing too much. Splitting up functions leads to reusability and easier testing.
+
+❌ **Bad:**
+
+```csharp
+public string ParseBetterJSAlternative(string code)
+{
+    var regexes = [
+        // ...
+    ];
+
+    var statements = explode(" ", code);
+    var tokens = new string[] {};
+    foreach (var regex in regexes)
+    {
+        foreach (var statement in statements)
+        {
+            // ...
+        }
+    }
+
+    var ast = new string[] {};
+    foreach (var token in tokens)
+    {
+        // lex...
+    }
+
+    foreach (var node in ast)
+    {
+        // parse...
+    }
+}
+```
+
+**Bad too:**
+
+We have carried out some of the functionality, but the `ParseBetterJSAlternative()` function is still very complex and not testable.
+
+```csharp
+public string Tokenize(string code)
+{
+    var regexes = new string[]
+    {
+        // ...
+    };
+
+    var statements = explode(" ", code);
+    var tokens = new string[] {};
+    foreach (var regex in regexes)
+    {
+        foreach (var statement in statements)
+        {
+            tokens[] = /* ... */;
+        }
+    }
+
+    return tokens;
+}
+
+public string Lexer(string[] tokens)
+{
+    var ast = new string[] {};
+    foreach (var token in tokens)
+    {
+        ast[] = /* ... */;
+    }
+
+    return ast;
+}
+
+public string ParseBetterJSAlternative(string code)
+{
+    var tokens = Tokenize(code);
+    var ast = Lexer(tokens);
+    foreach (var node in ast)
+    {
+        // parse...
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+The best solution is move out the dependencies of `ParseBetterJSAlternative()` function.
+
+```csharp
+class Tokenizer
+{
+    public string Tokenize(string code)
+    {
+        var regexes = new string[] {
+            // ...
+        };
+
+        var statements = explode(" ", code);
+        var tokens = new string[] {};
+        foreach (var regex in regexes)
+        {
+            foreach (var statement in statements)
+            {
+                tokens[] = /* ... */;
+            }
+        }
+
+        return tokens;
+    }
+}
+
+class Lexer
+{
+    public string Lexify(string[] tokens)
+    {
+        var ast = new[] {};
+        foreach (var token in tokens)
+        {
+            ast[] = /* ... */;
+        }
+
+        return ast;
+    }
+}
+
+class BetterJSAlternative
+{
+    private string _tokenizer;
+    private string _lexer;
+
+    public BetterJSAlternative(Tokenizer tokenizer, Lexer lexer)
+    {
+        _tokenizer = tokenizer;
+        _lexer = lexer;
+    }
+
+    public string Parse(string code)
+    {
+        var tokens = _tokenizer.Tokenize(code);
+        var ast = _lexer.Lexify(tokens);
+        foreach (var node in ast)
+        {
+            // parse...
+        }
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Function callers and callees should be close</b></summary>
+
+If a function calls another, keep those functions vertically close in the source file. Ideally, keep the caller right above the callee. We tend to read code from top-to-bottom, like a newspaper. Because of this, make your code read that way.
+
+❌ **Bad:**
+
+```csharp
+class PerformanceReview
+{
+    private readonly Employee _employee;
+
+    public PerformanceReview(Employee employee)
+    {
+        _employee = employee;
+    }
+
+    private IEnumerable<PeersData> LookupPeers()
+    {
+        return db.lookup(_employee, 'peers');
+    }
+
+    private ManagerData LookupManager()
+    {
+        return db.lookup(_employee, 'manager');
+    }
+
+    private IEnumerable<PeerReviews> GetPeerReviews()
+    {
+        var peers = LookupPeers();
+        // ...
+    }
+
+    public PerfReviewData PerfReview()
+    {
+        GetPeerReviews();
+        GetManagerReview();
+        GetSelfReview();
+    }
+
+    public ManagerData GetManagerReview()
+    {
+        var manager = LookupManager();
+    }
+
+    public EmployeeData GetSelfReview()
+    {
+        // ...
+    }
+}
+
+var  review = new PerformanceReview(employee);
+review.PerfReview();
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class PerformanceReview
+{
+    private readonly Employee _employee;
+
+    public PerformanceReview(Employee employee)
+    {
+        _employee = employee;
+    }
+
+    public PerfReviewData PerfReview()
+    {
+        GetPeerReviews();
+        GetManagerReview();
+        GetSelfReview();
+    }
+
+    private IEnumerable<PeerReviews> GetPeerReviews()
+    {
+        var peers = LookupPeers();
+        // ...
+    }
+
+    private IEnumerable<PeersData> LookupPeers()
+    {
+        return db.lookup(_employee, 'peers');
+    }
+
+    private ManagerData GetManagerReview()
+    {
+        var manager = LookupManager();
+        return manager;
+    }
+
+    private ManagerData LookupManager()
+    {
+        return db.lookup(_employee, 'manager');
+    }
+
+    private EmployeeData GetSelfReview()
+    {
+        // ...
+    }
+}
+
+var review = new PerformanceReview(employee);
+review.PerfReview();
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Encapsulate conditionals</b></summary>
+
+❌ **Bad:**
+
+```csharp
+if (article.state == "published")
+{
+    // ...
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+if (article.IsPublished())
+{
+    // ...
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Remove dead code</b></summary>
+
+Dead code is just as bad as duplicate code. There's no reason to keep it in your codebase. If it's not being called, get rid of it! It will still be safe in your version history if you still need it.
+
+❌ **Bad:**
+
+```csharp
+public void OldRequestModule(string url)
+{
+    // ...
+}
+
+public void NewRequestModule(string url)
+{
+    // ...
+}
+
+var request = NewRequestModule(requestUrl);
+InventoryTracker("apples", request, "www.inventory-awesome.io");
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public void RequestModule(string url)
+{
+    // ...
+}
+
+var request = RequestModule(requestUrl);
+InventoryTracker("apples", request, "www.inventory-awesome.io");
 ```
 
 **[⬆ back to top](#table-of-contents)**
