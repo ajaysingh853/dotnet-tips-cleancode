@@ -14,6 +14,7 @@ Say hi on [Twitter](https://twitter.com/ajaysingh853)!
   - [Variables](#variables)
   - [Functions](#functions)
   - [Objects and Data Structures](#objects-and-data-structures)
+  - [Classes](#classes)
   - [Formatting](#formatting)
   - [Comments](#comments)
 - [Other Resources](#other-resources)
@@ -1644,6 +1645,163 @@ class Employee
 
 var employee = new Employee("Dr. Strange");
 Console.WriteLine(employee.Name); // Employee name: Dr. Strange
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Classes
+
+<details>
+  <summary><b>Use method chaining</b></summary>
+
+This pattern is very useful and commonly used in many libraries. It allows your code to be expressive, and less verbose.
+For that reason, use method chaining and take a look at how clean your code will be.
+
+:white_check_mark: **Good:**
+
+```csharp
+public static class ListExtensions
+{
+    public static List<T> FluentAdd<T>(this List<T> list, T item)
+    {
+        list.Add(item);
+        return list;
+    }
+
+    public static List<T> FluentClear<T>(this List<T> list)
+    {
+        list.Clear();
+        return list;
+    }
+
+    public static List<T> FluentForEach<T>(this List<T> list, Action<T> action)
+    {
+        list.ForEach(action);
+        return list;
+    }
+
+    public static List<T> FluentInsert<T>(this List<T> list, int index, T item)
+    {
+        list.Insert(index, item);
+        return list;
+    }
+
+    public static List<T> FluentRemoveAt<T>(this List<T> list, int index)
+    {
+        list.RemoveAt(index);
+        return list;
+    }
+
+    public static List<T> FluentReverse<T>(this List<T> list)
+    {
+        list.Reverse();
+        return list;
+    }
+}
+
+internal static void ListFluentExtensions()
+{
+    var list = new List<int>() { 1, 2, 3, 4, 5 }
+        .FluentAdd(1)
+        .FluentInsert(0, 0)
+        .FluentRemoveAt(1)
+        .FluentReverse()
+        .FluentForEach(value => value.WriteLine())
+        .FluentClear();
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Prefer composition over inheritance</b></summary>
+
+As stated famously in [_Design Patterns_](https://en.wikipedia.org/wiki/Design_Patterns) by the Gang of Four,
+you should prefer composition over inheritance where you can. There are lots of good reasons to use inheritance and lots of good reasons to use composition.
+
+The main point for this maxim is that if your mind instinctively goes for inheritance, try to think if composition could model your problem better. In some cases it can.
+
+You might be wondering then, "when should I use inheritance?" It
+depends on your problem at hand, but this is a decent list of when inheritance makes more sense than composition:
+
+1. Your inheritance represents an "is-a" relationship and not a "has-a" relationship (Human->Animal vs. User->UserDetails).
+2. You can reuse code from the base classes (Humans can move like all animals).
+3. You want to make global changes to derived classes by changing a base class (Change the caloric expenditure of all animals when they move).
+
+❌ **Bad:**
+
+```csharp
+class Employee
+{
+    private string Name { get; set; }
+    private string Email { get; set; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    // ...
+}
+
+// Bad because Employees "have" tax data.
+// EmployeeTaxData is not a type of Employee
+
+class EmployeeTaxData : Employee
+{
+    private string Name { get; }
+    private string Email { get; }
+
+    public EmployeeTaxData(string name, string email, string ssn, string salary)
+    {
+         // ...
+    }
+
+    // ...
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class EmployeeTaxData
+{
+    public string Ssn { get; }
+    public string Salary { get; }
+
+    public EmployeeTaxData(string ssn, string salary)
+    {
+        Ssn = ssn;
+        Salary = salary;
+    }
+
+    // ...
+}
+
+class Employee
+{
+    public string Name { get; }
+    public string Email { get; }
+    public EmployeeTaxData TaxData { get; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    public void SetTax(string ssn, double salary)
+    {
+        TaxData = new EmployeeTaxData(ssn, salary);
+    }
+
+    // ...
+}
 ```
 
 **[⬆ back to top](#table-of-contents)**
