@@ -15,9 +15,15 @@ Say hi on [Twitter](https://twitter.com/ajaysingh853)!
   - [Functions](#functions)
   - [Objects and Data Structures](#objects-and-data-structures)
   - [Classes](#classes)
+  - [SOLID](#solid)
+  - [Concurrency](#concurrency)
+  - [Error Handling](#error-handling)
+  - [Testing](#testing)
   - [Formatting](#formatting)
   - [Comments](#comments)
 - [Other Resources](#other-resources)
+  - [Tools](#tools)
+  - [Cheatsheets](#cheatsheets)
 - [License](#license)
 
 # Introduction
@@ -1808,6 +1814,990 @@ class Employee
 
 </details>
 
+## SOLID
+
+<details>
+  <summary><b>What is SOLID?</b></summary>
+
+**SOLID** is the mnemonic acronym introduced by Michael Feathers for the first five principles named by Robert Martin, which meant five basic principles of object-oriented programming and design.
+
+- [S: Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
+- [O: Open/Closed Principle (OCP)](#openclosed-principle-ocp)
+- [L: Liskov Substitution Principle (LSP)](#liskov-substitution-principle-lsp)
+- [I: Interface Segregation Principle (ISP)](#interface-segregation-principle-isp)
+- [D: Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip)
+
+</details>
+
+<details>
+  <summary><b>Single Responsibility Principle (SRP)</b></summary>
+
+As stated in Clean Code, "There should never be more than one reason for a class to change". It's tempting to jam-pack a class with a lot of functionality, like when you can only take one suitcase on your flight. The issue with this is that your class won't be conceptually cohesive and it will give it many reasons to change. Minimizing the amount of times you need to change a class is important.
+
+It's important because if too much functionality is in one class and you modify a piece of it, it can be difficult to understand how that will affect other dependent modules in your codebase.
+
+❌ **Bad:**
+
+```csharp
+class UserSettings
+{
+    private User User;
+
+    public UserSettings(User user)
+    {
+        User = user;
+    }
+
+    public void ChangeSettings(Settings settings)
+    {
+        if (verifyCredentials())
+        {
+            // ...
+        }
+    }
+
+    private bool VerifyCredentials()
+    {
+        // ...
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class UserAuth
+{
+    private User User;
+
+    public UserAuth(User user)
+    {
+        User = user;
+    }
+
+    public bool VerifyCredentials()
+    {
+        // ...
+    }
+}
+
+class UserSettings
+{
+    private User User;
+    private UserAuth Auth;
+
+    public UserSettings(User user)
+    {
+        User = user;
+        Auth = new UserAuth(user);
+    }
+
+    public void ChangeSettings(Settings settings)
+    {
+        if (Auth.VerifyCredentials())
+        {
+            // ...
+        }
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Open/Closed Principle (OCP)</b></summary>
+
+As stated by Bertrand Meyer, "software entities (classes, modules, functions, etc.) should be open for extension, but closed for modification." What does that mean though? This principle basically states that you should allow users to add new functionalities without changing existing code.
+
+❌ **Bad:**
+
+```csharp
+abstract class AdapterBase
+{
+    protected string Name;
+
+    public string GetName()
+    {
+        return Name;
+    }
+}
+
+class AjaxAdapter : AdapterBase
+{
+    public AjaxAdapter()
+    {
+        Name = "ajaxAdapter";
+    }
+}
+
+class NodeAdapter : AdapterBase
+{
+    public NodeAdapter()
+    {
+        Name = "nodeAdapter";
+    }
+}
+
+class HttpRequester : AdapterBase
+{
+    private readonly AdapterBase Adapter;
+
+    public HttpRequester(AdapterBase adapter)
+    {
+        Adapter = adapter;
+    }
+
+    public bool Fetch(string url)
+    {
+        var adapterName = Adapter.GetName();
+
+        if (adapterName == "ajaxAdapter")
+        {
+            return MakeAjaxCall(url);
+        }
+        else if (adapterName == "httpNodeAdapter")
+        {
+            return MakeHttpCall(url);
+        }
+    }
+
+    private bool MakeAjaxCall(string url)
+    {
+        // request and return promise
+    }
+
+    private bool MakeHttpCall(string url)
+    {
+        // request and return promise
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+interface IAdapter
+{
+    bool Request(string url);
+}
+
+class AjaxAdapter : IAdapter
+{
+    public bool Request(string url)
+    {
+        // request and return promise
+    }
+}
+
+class NodeAdapter : IAdapter
+{
+    public bool Request(string url)
+    {
+        // request and return promise
+    }
+}
+
+class HttpRequester
+{
+    private readonly IAdapter Adapter;
+
+    public HttpRequester(IAdapter adapter)
+    {
+        Adapter = adapter;
+    }
+
+    public bool Fetch(string url)
+    {
+        return Adapter.Request(url);
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Liskov Substitution Principle (LSP)</b></summary>
+
+This is a scary term for a very simple concept. It's formally defined as "If S is a subtype of T, then objects of type T may be replaced with objects of type S (i.e., objects of type S may substitute objects of type T) without altering any of the desirable properties of that program (correctness, task performed,
+etc.)." That's an even scarier definition.
+
+The best explanation for this is if you have a parent class and a child class, then the base class and child class can be used interchangeably without getting incorrect results. This might still be confusing, so let's take a look at the classic Square-Rectangle example. Mathematically, a square is a rectangle, but if you model it using the "is-a" relationship via inheritance, you quickly
+get into trouble.
+
+❌ **Bad:**
+
+```csharp
+class Rectangle
+{
+    protected double Width = 0;
+    protected double Height = 0;
+
+    public Drawable Render(double area)
+    {
+        // ...
+    }
+
+    public void SetWidth(double width)
+    {
+        Width = width;
+    }
+
+    public void SetHeight(double height)
+    {
+        Height = height;
+    }
+
+    public double GetArea()
+    {
+        return Width * Height;
+    }
+}
+
+class Square : Rectangle
+{
+    public double SetWidth(double width)
+    {
+        Width = Height = width;
+    }
+
+    public double SetHeight(double height)
+    {
+        Width = Height = height;
+    }
+}
+
+Drawable RenderLargeRectangles(Rectangle rectangles)
+{
+    foreach (rectangle in rectangles)
+    {
+        rectangle.SetWidth(4);
+        rectangle.SetHeight(5);
+        var area = rectangle.GetArea(); // BAD: Will return 25 for Square. Should be 20.
+        rectangle.Render(area);
+    }
+}
+
+var rectangles = new[] { new Rectangle(), new Rectangle(), new Square() };
+RenderLargeRectangles(rectangles);
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+abstract class ShapeBase
+{
+    protected double Width = 0;
+    protected double Height = 0;
+
+    abstract public double GetArea();
+
+    public Drawable Render(double area)
+    {
+        // ...
+    }
+}
+
+class Rectangle : ShapeBase
+{
+    public void SetWidth(double width)
+    {
+        Width = width;
+    }
+
+    public void SetHeight(double height)
+    {
+        Height = height;
+    }
+
+    public double GetArea()
+    {
+        return Width * Height;
+    }
+}
+
+class Square : ShapeBase
+{
+    private double Length = 0;
+
+    public double SetLength(double length)
+    {
+        Length = length;
+    }
+
+    public double GetArea()
+    {
+        return Math.Pow(Length, 2);
+    }
+}
+
+Drawable RenderLargeRectangles(Rectangle rectangles)
+{
+    foreach (rectangle in rectangles)
+    {
+        if (rectangle is Square)
+        {
+            rectangle.SetLength(5);
+        }
+        else if (rectangle is Rectangle)
+        {
+            rectangle.SetWidth(4);
+            rectangle.SetHeight(5);
+        }
+
+        var area = rectangle.GetArea();
+        rectangle.Render(area);
+    }
+}
+
+var shapes = new[] { new Rectangle(), new Rectangle(), new Square() };
+RenderLargeRectangles(shapes);
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Interface Segregation Principle (ISP)</b></summary>
+
+ISP states that "Clients should not be forced to depend upon interfaces that they do not use."
+
+A good example to look at that demonstrates this principle is for
+classes that require large settings objects. Not requiring clients to setup huge amounts of options is beneficial, because most of the time they won't need all of the settings. Making them optional helps prevent having a "fat interface".
+
+❌ **Bad:**
+
+```csharp
+public interface IEmployee
+{
+    void Work();
+    void Eat();
+}
+
+public class Human : IEmployee
+{
+    public void Work()
+    {
+        // ....working
+    }
+
+    public void Eat()
+    {
+        // ...... eating in lunch break
+    }
+}
+
+public class Robot : IEmployee
+{
+    public void Work()
+    {
+        //.... working much more
+    }
+
+    public void Eat()
+    {
+        //.... robot can't eat, but it must implement this method
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+Not every worker is an employee, but every employee is an worker.
+
+```csharp
+public interface IWorkable
+{
+    void Work();
+}
+
+public interface IFeedable
+{
+    void Eat();
+}
+
+public interface IEmployee : IFeedable, IWorkable
+{
+}
+
+public class Human : IEmployee
+{
+    public void Work()
+    {
+        // ....working
+    }
+
+    public void Eat()
+    {
+        //.... eating in lunch break
+    }
+}
+
+// robot can only work
+public class Robot : IWorkable
+{
+    public void Work()
+    {
+        // ....working
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Dependency Inversion Principle (DIP)</b></summary>
+
+This principle states two essential things:
+
+1. High-level modules should not depend on low-level modules. Both should depend on abstractions.
+2. Abstractions should not depend upon details. Details should depend on abstractions.
+
+This can be hard to understand at first, but if you've worked with .NET/.NET Core framework, you've seen an implementation of this principle in the form of [Dependency Injection](https://martinfowler.com/articles/injection.html) (DI). While they are not identical concepts, DIP keeps high-level modules from knowing the details of its low-level modules and setting them up.
+It can accomplish this through DI. A huge benefit of this is that it reduces the coupling between modules. Coupling is a very bad development pattern because it makes your code hard to refactor.
+
+❌ **Bad:**
+
+```csharp
+public abstract class EmployeeBase
+{
+    protected virtual void Work()
+    {
+        // ....working
+    }
+}
+
+public class Human : EmployeeBase
+{
+    public override void Work()
+    {
+        //.... working much more
+    }
+}
+
+public class Robot : EmployeeBase
+{
+    public override void Work()
+    {
+        //.... working much, much more
+    }
+}
+
+public class Manager
+{
+    private readonly Robot _robot;
+    private readonly Human _human;
+
+    public Manager(Robot robot, Human human)
+    {
+        _robot = robot;
+        _human = human;
+    }
+
+    public void Manage()
+    {
+        _robot.Work();
+        _human.Work();
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public interface IEmployee
+{
+    void Work();
+}
+
+public class Human : IEmployee
+{
+    public void Work()
+    {
+        // ....working
+    }
+}
+
+public class Robot : IEmployee
+{
+    public void Work()
+    {
+        //.... working much more
+    }
+}
+
+public class Manager
+{
+    private readonly IEnumerable<IEmployee> _employees;
+
+    public Manager(IEnumerable<IEmployee> employees)
+    {
+        _employees = employees;
+    }
+
+    public void Manage()
+    {
+        foreach (var employee in _employees)
+        {
+            _employee.Work();
+        }
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Don’t repeat yourself (DRY)</b></summary>
+
+Try to observe the [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
+
+Do your absolute best to avoid duplicate code. Duplicate code is bad because it means that there's more than one place to alter something if you need to change some logic.
+
+Imagine if you run a restaurant and you keep track of your inventory: all your tomatoes, onions, garlic, spices, etc. If you have multiple lists that you keep this on, then all have to be updated when you serve a dish with tomatoes in them. If you only have one list, there's only one place to update!
+
+Oftentimes you have duplicate code because you have two or more slightly different things, that share a lot in common, but their differences force you to have two or more separate functions that do much of the same things. Removing duplicate code means creating an abstraction that can handle this set of different things with just one function/module/class.
+
+Getting the abstraction right is critical, that's why you should follow the SOLID principles laid out in the [Classes](#classes) section. Bad abstractions can be worse than duplicate code, so be careful! Having said this, if you can make a good abstraction, do it! Don't repeat yourself, otherwise you'll find yourself updating multiple places anytime you want to change one thing.
+
+❌ **Bad:**
+
+```csharp
+public List<EmployeeData> ShowDeveloperList(Developers developers)
+{
+    foreach (var developers in developer)
+    {
+        var expectedSalary = developer.CalculateExpectedSalary();
+        var experience = developer.GetExperience();
+        var githubLink = developer.GetGithubLink();
+        var data = new[] {
+            expectedSalary,
+            experience,
+            githubLink
+        };
+
+        Render(data);
+    }
+}
+
+public List<ManagerData> ShowManagerList(Manager managers)
+{
+    foreach (var manager in managers)
+    {
+        var expectedSalary = manager.CalculateExpectedSalary();
+        var experience = manager.GetExperience();
+        var githubLink = manager.GetGithubLink();
+        var data =
+        new[] {
+            expectedSalary,
+            experience,
+            githubLink
+        };
+
+        render(data);
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+public List<EmployeeData> ShowList(Employee employees)
+{
+    foreach (var employee in employees)
+    {
+        var expectedSalary = employees.CalculateExpectedSalary();
+        var experience = employees.GetExperience();
+        var githubLink = employees.GetGithubLink();
+        var data =
+        new[] {
+            expectedSalary,
+            experience,
+            githubLink
+        };
+
+        render(data);
+    }
+}
+```
+
+**Very good:**
+
+It is better to use a compact version of the code.
+
+```csharp
+public List<EmployeeData> ShowList(Employee employees)
+{
+    foreach (var employee in employees)
+    {
+        render(new[] {
+            employee.CalculateExpectedSalary(),
+            employee.GetExperience(),
+            employee.GetGithubLink()
+        });
+    }
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Concurrency
+
+<details>
+  <summary><b>Use Async/Await</b></summary>
+
+**Summary of Asynchronous Programming Guidelines**
+
+| Name              | Description                                       | Exceptions                      |
+| ----------------- | ------------------------------------------------- | ------------------------------- |
+| Avoid async void  | Prefer async Task methods over async void methods | Event handlers                  |
+| Async all the way | Don't mix blocking and async code                 | Console main method (C# <= 7.0) |
+| Configure context | Use `ConfigureAwait(false)` when you can          | Methods that require con­text   |
+
+**The Async Way of Doing Things**
+
+| To Do This ...                           | Instead of This ...        | Use This             |
+| ---------------------------------------- | -------------------------- | -------------------- |
+| Retrieve the result of a background task | `Task.Wait or Task.Result` | `await`              |
+| Wait for any task to complete            | `Task.WaitAny`             | `await Task.WhenAny` |
+| Retrieve the results of multiple tasks   | `Task.WaitAll`             | `await Task.WhenAll` |
+| Wait a period of time                    | `Thread.Sleep`             | `await Task.Delay`   |
+
+**Best practice**
+
+The async/await is the best for IO bound tasks (networking communication, database communication, http request, etc.) but it is not good to apply on computational bound tasks (traverse on the huge list, render a hugge image, etc.). Because it will release the holding thread to the thread pool and CPU/cores available will not involve to process those tasks. Therefore, we should avoid using Async/Await for computional bound tasks.
+
+For dealing with computational bound tasks, prefer to use `Task.Factory.CreateNew` with `TaskCreationOptions` is `LongRunning`. It will start a new background thread to process a heavy computational bound task without release it back to the thread pool until the task being completed.
+
+**Know Your Tools**
+
+There's a lot to learn about async and await, and it's natural to get a little disoriented. Here's a quick reference of solutions to common problems.
+
+**Solutions to Common Async Problems**
+
+| Problem                                         | Solution                                                                          |
+| ----------------------------------------------- | --------------------------------------------------------------------------------- |
+| Create a task to execute code                   | `Task.Run` or `TaskFactory.StartNew` (not the `Task` constructor or `Task.Start`) |
+| Create a task wrapper for an operation or event | `TaskFactory.FromAsync` or `TaskCompletionSource<T>`                              |
+| Support cancellation                            | `CancellationTokenSource` and `CancellationToken`                                 |
+| Report progress                                 | `IProgress<T>` and `Progress<T>`                                                  |
+| Handle streams of data                          | TPL Dataflow or Reactive Extensions                                               |
+| Synchronize access to a shared resource         | `SemaphoreSlim`                                                                   |
+| Asynchronously initialize a resource            | `AsyncLazy<T>`                                                                    |
+| Async-ready producer/consumer structures        | TPL Dataflow or `AsyncCollection<T>`                                              |
+
+Read the [Task-based Asynchronous Pattern (TAP) document](http://www.microsoft.com/download/en/details.aspx?id=19957).
+It is extremely well-written, and includes guidance on API design and the proper use of async/await (including cancellation and progress reporting).
+
+There are many new await-friendly techniques that should be used instead of the old blocking techniques. If you have any of these Old examples in your new async code, you're Doing It Wrong(TM):
+
+| Old                | New                                  | Description                                                   |
+| ------------------ | ------------------------------------ | ------------------------------------------------------------- |
+| `task.Wait`        | `await task`                         | Wait/await for a task to complete                             |
+| `task.Result`      | `await task`                         | Get the result of a completed task                            |
+| `Task.WaitAny`     | `await Task.WhenAny`                 | Wait/await for one of a collection of tasks to complete       |
+| `Task.WaitAll`     | `await Task.WhenAll`                 | Wait/await for every one of a collection of tasks to complete |
+| `Thread.Sleep`     | `await Task.Delay`                   | Wait/await for a period of time                               |
+| `Task` constructor | `Task.Run` or `TaskFactory.StartNew` | Create a code-based task                                      |
+
+> Source https://gist.github.com/jonlabelle/841146854b23b305b50fa5542f84b20c
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Error Handling
+
+<details>
+  <summary><b>Basic concept of error handling</b></summary>
+
+Thrown errors are a good thing! They mean the runtime has successfully identified when something in your program has gone wrong and it's letting you know by stopping function execution on the current stack, killing the process (in .NET/.NET Core), and notifying you in the console with a stack trace.
+
+</details>
+
+<details>
+  <summary><b>Don't use 'throw ex' in catch block</b></summary>
+
+If you need to re-throw an exception after catching it, use just 'throw'
+By using this, you will save the stack trace. But in the bad option below,
+you will lost the stack trace.
+
+❌ **Bad:**
+
+```csharp
+try
+{
+    // Do something..
+}
+catch (Exception ex)
+{
+    // Any action something like roll-back or logging etc.
+    throw ex;
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+try
+{
+    // Do something..
+}
+catch (Exception ex)
+{
+    // Any action something like roll-back or logging etc.
+    throw;
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Don't ignore caught errors</b></summary>
+
+Doing nothing with a caught error doesn't give you the ability to ever fix or react to said error. Throwing the error isn't much better as often times it can get lost in a sea of things printed to the console. If you wrap any bit of code in a `try/catch` it means you think an error may occur there and therefore you should have a plan, or create a code path, for when it occurs.
+
+❌ **Bad:**
+
+```csharp
+try
+{
+    FunctionThatMightThrow();
+}
+catch (Exception ex)
+{
+    // silent exception
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+try
+{
+    FunctionThatMightThrow();
+}
+catch (Exception error)
+{
+    NotifyUserOfError(error);
+
+    // Another option
+    ReportErrorToService(error);
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Use multiple catch block instead of if conditions.</b></summary>
+
+If you need to take action according to type of the exception,
+you better use multiple catch block for exception handling.
+
+❌ **Bad:**
+
+```csharp
+try
+{
+    // Do something..
+}
+catch (Exception ex)
+{
+
+    if (ex is TaskCanceledException)
+    {
+        // Take action for TaskCanceledException
+    }
+    else if (ex is TaskSchedulerException)
+    {
+        // Take action for TaskSchedulerException
+    }
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+try
+{
+    // Do something..
+}
+catch (TaskCanceledException ex)
+{
+    // Take action for TaskCanceledException
+}
+catch (TaskSchedulerException ex)
+{
+    // Take action for TaskSchedulerException
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Keep exception stack trace when rethrowing exceptions</b></summary>
+
+C# allows the exception to be rethrown in a catch block using the `throw` keyword. It is a bad practice to throw a caught exception using `throw e;`. This statement resets the stack trace. Instead use `throw;`. This will keep the stack trace and provide a deeper insight about the exception.
+Another option is to use a custom exception. Simply instantiate a new exception and set its inner exception property to the caught exception with throw `new CustomException("some info", e);`. Adding information to an exception is a good practice as it will help with debugging. However, if the objective is to log an exception then use `throw;` to pass the buck to the caller.
+
+❌ **Bad:**
+
+```csharp
+try
+{
+    FunctionThatMightThrow();
+}
+catch (Exception ex)
+{
+    logger.LogInfo(ex);
+    throw ex;
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+try
+{
+    FunctionThatMightThrow();
+}
+catch (Exception error)
+{
+    logger.LogInfo(error);
+    throw;
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+try
+{
+    FunctionThatMightThrow();
+}
+catch (Exception error)
+{
+    logger.LogInfo(error);
+    throw new CustomException(error);
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Testing
+
+<details>
+  <summary><b>Basic concept of testing</b></summary>
+
+Testing is more important than shipping. If you have no tests or an
+inadequate amount, then every time you ship code you won't be sure that you didn't break anything. Deciding on what constitutes an adequate amount is up to your team, but having 100% coverage (all statements and branches) is how you achieve very high confidence and developer peace of mind. This means that in addition to having a great testing framework, you also need to use a [good coverage tool](https://docs.microsoft.com/en-us/visualstudio/test/using-code-coverage-to-determine-how-much-code-is-being-tested).
+
+There's no excuse to not write tests. There's [plenty of good .NET test frameworks](https://github.com/thangchung/awesome-dotnet-core#testing), so find one that your team prefers. When you find one that works for your team, then aim to always write tests for every new feature/module you introduce. If your preferred method is Test Driven Development (TDD), that is great, but the main point is to just make sure you are reaching your coverage goals before launching any feature, or refactoring an existing one.
+
+</details>
+
+<details>
+  <summary><b>Single concept per test</b></summary>
+
+Ensures that your tests are laser focused and not testing miscellaenous (non-related) things, forces [AAA patern](http://wiki.c2.com/?ArrangeActAssert) used to make your codes more clean and readable.
+
+❌ **Bad:**
+
+```csharp
+
+public class MakeDotNetGreatAgainTests
+{
+    [Fact]
+    public void HandleDateBoundaries()
+    {
+        var date = new MyDateTime("1/1/2015");
+        date.AddDays(30);
+        Assert.Equal("1/31/2015", date);
+
+        date = new MyDateTime("2/1/2016");
+        date.AddDays(28);
+        Assert.Equal("02/29/2016", date);
+
+        date = new MyDateTime("2/1/2015");
+        date.AddDays(28);
+        Assert.Equal("03/01/2015", date);
+    }
+}
+
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+
+public class MakeDotNetGreatAgainTests
+{
+    [Fact]
+    public void Handle30DayMonths()
+    {
+        // Arrange
+        var date = new MyDateTime("1/1/2015");
+
+        // Act
+        date.AddDays(30);
+
+        // Assert
+        Assert.Equal("1/31/2015", date);
+    }
+
+    [Fact]
+    public void HandleLeapYear()
+    {
+        // Arrange
+        var date = new MyDateTime("2/1/2016");
+
+        // Act
+        date.AddDays(28);
+
+        // Assert
+        Assert.Equal("02/29/2016", date);
+    }
+
+    [Fact]
+    public void HandleNonLeapYear()
+    {
+        // Arrange
+        var date = new MyDateTime("2/1/2015");
+
+        // Act
+        date.AddDays(28);
+
+        // Assert
+        Assert.Equal("03/01/2015", date);
+    }
+}
+
+```
+
+> Soure https://www.codingblocks.net/podcast/how-to-write-amazing-unit-tests
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
 ## Formatting
 
 <details>
@@ -2183,6 +3173,22 @@ private int ConvertTo32BitInt(int value)
 **[⬆ back to top](#table-of-contents)**
 
 </details>
+
+# Other Resources
+
+## Tools
+
+- [codemaid](https://github.com/codecadwallader/codemaid) - open source Visual Studio extension to cleanup and simplify our C#, C++, F#, VB, PHP, PowerShell, JSON, XAML, XML, ASP, HTML, CSS, LESS, SCSS, JavaScript and TypeScript coding
+- [Sharpen](https://github.com/sharpenrocks/Sharpen) - Visual Studio extension that intelligently introduces new C# features into your existing code base
+- [tslint-clean-code](https://github.com/Glavin001/tslint-clean-code) - TSLint rules for enforcing Clean Code
+
+## Cheatsheets
+
+- [AspNetCoreDiagnosticScenarios](https://github.com/davidfowl/AspNetCoreDiagnosticScenarios) - Examples of broken patterns in ASP.NET Core applications
+- [.NET Memory Performance Analysis](https://github.com/Maoni0/mem-doc/blob/master/doc/.NETMemoryPerformanceAnalysis.md) - This document aims to help folks who develop applications in .NET with how to think about memory performance analysis and finding the right approaches to perform such analysis if they need to. In this context .NET includes .NET Framework and .NET Core. In order to get the latest memory improvements in both the garbage collector and the rest of the framework I strongly encourage you to be on .NET Core if you are not already, because that’s where the active development happens
+- [101 Design Patterns & Tips for Developers](https://sourcemaking.com/design-patterns-and-tips)
+
+---
 
 # License
 
