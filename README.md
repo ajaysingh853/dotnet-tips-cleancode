@@ -13,6 +13,8 @@ Say hi on [Twitter](https://twitter.com/ajaysingh853)!
   - [Naming](#naming)
   - [Variables](#variables)
   - [Functions](#functions)
+  - [Objects and Data Structures](#objects-and-data-structures)
+  - [Classes](#classes)
   - [Formatting](#formatting)
   - [Comments](#comments)
 - [Other Resources](#other-resources)
@@ -1530,6 +1532,282 @@ InventoryTracker("apples", request, "www.inventory-awesome.io");
 
 </details>
 
+## Objects and Data Structures
+
+<details>
+  <summary><b>Use getters and setters</b></summary>
+
+In C# / VB.NET you can set `public`, `protected` and `private` keywords for methods.
+Using it, you can control properties modification on an object.
+
+- When you want to do more beyond getting an object property, you don't have to look up and change every accessor in your codebase.
+- Makes adding validation simple when doing a `set`.
+- Encapsulates the internal representation.
+- Easy to add logging and error handling when getting and setting.
+- Inheriting this class, you can override default functionality.
+- You can lazy load your object's properties, let's say getting it from a server.
+
+Additionally, this is part of Open/Closed principle, from object-oriented design principles.
+
+❌ **Bad:**
+
+```csharp
+class BankAccount
+{
+    public double Balance = 1000;
+}
+
+var bankAccount = new BankAccount();
+
+// Fake buy shoes...
+bankAccount.Balance -= 100;
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class BankAccount
+{
+    private double _balance = 0.0D;
+
+    pubic double Balance {
+        get {
+            return _balance;
+        }
+    }
+
+    public BankAccount(balance = 1000)
+    {
+       _balance = balance;
+    }
+
+    public void WithdrawBalance(int amount)
+    {
+        if (amount > _balance)
+        {
+            throw new Exception('Amount greater than available balance.');
+        }
+
+        _balance -= amount;
+    }
+
+    public void DepositBalance(int amount)
+    {
+        _balance += amount;
+    }
+}
+
+var bankAccount = new BankAccount();
+
+// Buy shoes...
+bankAccount.WithdrawBalance(price);
+
+// Get balance
+balance = bankAccount.Balance;
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Make objects have private/protected members</b></summary>
+
+❌ **Bad:**
+
+```csharp
+class Employee
+{
+    public string Name { get; set; }
+
+    public Employee(string name)
+    {
+        Name = name;
+    }
+}
+
+var employee = new Employee("Dr. Strange");
+Console.WriteLine(employee.Name); // Employee name: Dr. Strange
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class Employee
+{
+    public string Name { get; }
+
+    public Employee(string name)
+    {
+        Name = name;
+    }
+}
+
+var employee = new Employee("Dr. Strange");
+Console.WriteLine(employee.Name); // Employee name: Dr. Strange
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+## Classes
+
+<details>
+  <summary><b>Use method chaining</b></summary>
+
+This pattern is very useful and commonly used in many libraries. It allows your code to be expressive, and less verbose.
+For that reason, use method chaining and take a look at how clean your code will be.
+
+:white_check_mark: **Good:**
+
+```csharp
+public static class ListExtensions
+{
+    public static List<T> FluentAdd<T>(this List<T> list, T item)
+    {
+        list.Add(item);
+        return list;
+    }
+
+    public static List<T> FluentClear<T>(this List<T> list)
+    {
+        list.Clear();
+        return list;
+    }
+
+    public static List<T> FluentForEach<T>(this List<T> list, Action<T> action)
+    {
+        list.ForEach(action);
+        return list;
+    }
+
+    public static List<T> FluentInsert<T>(this List<T> list, int index, T item)
+    {
+        list.Insert(index, item);
+        return list;
+    }
+
+    public static List<T> FluentRemoveAt<T>(this List<T> list, int index)
+    {
+        list.RemoveAt(index);
+        return list;
+    }
+
+    public static List<T> FluentReverse<T>(this List<T> list)
+    {
+        list.Reverse();
+        return list;
+    }
+}
+
+internal static void ListFluentExtensions()
+{
+    var list = new List<int>() { 1, 2, 3, 4, 5 }
+        .FluentAdd(1)
+        .FluentInsert(0, 0)
+        .FluentRemoveAt(1)
+        .FluentReverse()
+        .FluentForEach(value => value.WriteLine())
+        .FluentClear();
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
+<details>
+  <summary><b>Prefer composition over inheritance</b></summary>
+
+As stated famously in [_Design Patterns_](https://en.wikipedia.org/wiki/Design_Patterns) by the Gang of Four,
+you should prefer composition over inheritance where you can. There are lots of good reasons to use inheritance and lots of good reasons to use composition.
+
+The main point for this maxim is that if your mind instinctively goes for inheritance, try to think if composition could model your problem better. In some cases it can.
+
+You might be wondering then, "when should I use inheritance?" It
+depends on your problem at hand, but this is a decent list of when inheritance makes more sense than composition:
+
+1. Your inheritance represents an "is-a" relationship and not a "has-a" relationship (Human->Animal vs. User->UserDetails).
+2. You can reuse code from the base classes (Humans can move like all animals).
+3. You want to make global changes to derived classes by changing a base class (Change the caloric expenditure of all animals when they move).
+
+❌ **Bad:**
+
+```csharp
+class Employee
+{
+    private string Name { get; set; }
+    private string Email { get; set; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    // ...
+}
+
+// Bad because Employees "have" tax data.
+// EmployeeTaxData is not a type of Employee
+
+class EmployeeTaxData : Employee
+{
+    private string Name { get; }
+    private string Email { get; }
+
+    public EmployeeTaxData(string name, string email, string ssn, string salary)
+    {
+         // ...
+    }
+
+    // ...
+}
+```
+
+:white_check_mark: **Good:**
+
+```csharp
+class EmployeeTaxData
+{
+    public string Ssn { get; }
+    public string Salary { get; }
+
+    public EmployeeTaxData(string ssn, string salary)
+    {
+        Ssn = ssn;
+        Salary = salary;
+    }
+
+    // ...
+}
+
+class Employee
+{
+    public string Name { get; }
+    public string Email { get; }
+    public EmployeeTaxData TaxData { get; }
+
+    public Employee(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    public void SetTax(string ssn, double salary)
+    {
+        TaxData = new EmployeeTaxData(ssn, salary);
+    }
+
+    // ...
+}
+```
+
+**[⬆ back to top](#table-of-contents)**
+
+</details>
+
 ## Formatting
 
 <details>
@@ -1907,7 +2185,5 @@ private int ConvertTo32BitInt(int value)
 </details>
 
 # License
-
-[![CC0](http://mirrors.creativecommons.org/presskit/buttons/88x31/svg/cc-zero.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 To the extent possible under law, [ajaysingh](https://github.com/ajaysingh853) has waived all copyright and related or neighboring rights to this work.
