@@ -1,15 +1,15 @@
-# .NET/.NET Core Clean Code concepts adapted
+# .NET/.NET Core Tips and Clean Code concepts
 
-If you liked `dotnet-cleancode` project or if it helped you, please give a star :star: for this repository. That will not only help strengthen our .NET community but also improve skills about the clean code for .NET developers in around the world. Thank you very much :+1:
+If you enjoyed the `dotnet-tips-cleancode` project or found it helpful, please consider giving a star :star: to this repository. Your support will not only enhance our .NET community but also enhance the clean code skills of .NET developers worldwide. Thank you! :+1:
 
-Say hi on [Twitter](https://twitter.com/ajaysingh853)!
+Connect on [Twitter](https://twitter.com/ajaysingh853) / [Linkedin](www.linkedin.com/in/ajaysingh853
+)!
 
 # Table of Contents
 
-- [.NET/.NET Core Clean Code concepts adapted](#netnet-core-clean-code-concepts-adapted)
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
-- [.NET Clean Code](#net-clean-code)
+- [Clean Code](#clean-code)
   - [Naming](#naming)
   - [Variables](#variables)
   - [Functions](#functions)
@@ -28,19 +28,19 @@ Say hi on [Twitter](https://twitter.com/ajaysingh853)!
 
 # Introduction
 
-![Humorous image of software quality estimation as a count of how many expletives you shout when reading code](http://www.osnews.com/images/comics/wtfm.jpg)
+![image](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.linkedin.com%2Fpulse%2Fwhat-did-i-learn-while-doing-code-reviews-nishant-singh&psig=AOvVaw3M1hQa8fel9mJMWHXv08nm&ust=1684678397172000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCLC_hZuKhP8CFQAAAAAdAAAAABAE)
 
-Software engineering principles, from Robert C. Martin's book [_Clean Code_](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882), adapted for .NET/.NET Core. This is not a style guide. It's a guide to producing readable, reusable, and refactorable software in .NET/.NET Core.
+Clean code is a concept that aims to improve the quality of software development by applying principles and practices that make code more readable, maintainable, and testable. Clean code is written with the reader in mind, using clear and concise language, meaningful names, and consistent formatting. It is also well-organized and structured, making it easy to find and understand the code's purpose. Clean code is easier to debug and test, and it is less likely to contain errors. As a result, clean code can save time and money in the long run.
 
-Not every principle herein has to be strictly followed, and even fewer will be universally agreed upon. These are guidelines and nothing more, but they are ones codified over many years of collective experience by the authors of _Clean Code_.
+If you are a software developer, I encourage you to learn more about clean code and apply its principles to your own work. You will be glad you did.
 
-# .NET Clean Code
+# Clean Code
 
 ## Naming
 
 <details>
   <summary><b>Avoid using bad names</b></summary>
-A good name allows the code to be used by many developers. The name should reflect what it does and give context.
+A well-chosen name enables code usability for multiple developers. It should accurately convey its purpose and provide contextual information.
 
 ❌ **Bad:**
 
@@ -59,9 +59,9 @@ int currentDateTime;
 </details>
 
 <details>
-  <summary><b>Avoid Misleading Names</b></summary>
+  <summary><b>Choose Clear Names</b></summary>
 
-Name the variable to reflect what it is used for.
+Use Descriptive Variable Names: Name variables to reflect their purpose.
 
 ❌ **Bad:**
 
@@ -80,9 +80,9 @@ var listOfUsers = _usersService.GetUsers().ToList();
 </details>
 
 <details>
-  <summary><b>Avoid Hungarian notation</b></summary>
+  <summary><b>Avoid Using Hungarian Notation</b></summary>
 
-Hungarian Notation restates the type which is already present in the declaration. This is pointless since modern IDEs will identify the type.
+Avoid Hungarian Notation: Modern IDEs can automatically identify variable types, making the restatement of types invariable declarations redundant.
 
 ❌ **Bad:**
 
@@ -100,7 +100,7 @@ string fullName;
 DateTime modifiedDate;
 ```
 
-Hungarian Notation should also not be used in paramaters.
+Avoid Hungarian Notation in Parameters.
 
 ❌ **Bad:**
 
@@ -125,11 +125,9 @@ public bool IsProduct(string product, int amount)
 </details>
 
 <details>
-  <summary><b>Use consistent capitalization</b></summary>
+  <summary><b>Maintain Consistent Capitalization</b></summary>
 
-Capitalization tells you a lot about your variables,
-functions, etc. These rules are subjective, so your team can choose whatever
-they want. The point is, no matter what you all choose, just be consistent.
+Capitalization provides important information about variables, functions, and more. While the rules are subjective, it is crucial for your team to establish a consistent approach.
 
 ❌ **Bad:**
 
@@ -140,11 +138,11 @@ const int daysInMonth = 30;
 var songs = new List<string> { 'Beautiful', 'See You', 'Dim' };
 var Artists = new List<string> { 'Akon', 'Nosus', 'Skyharbor' };
 
-bool EraseDatabase() {}
+bool removeDatabase() {}
 bool Restore_database() {}
 
 class animal {}
-class Alpaca {}
+class Machine {}
 ```
 
 :white_check_mark: **Good:**
@@ -156,11 +154,11 @@ const int DaysInMonth = 30;
 var songs = new List<string> { 'Beautiful', 'See You', 'Dim' };
 var artists = new List<string> { 'Akon', 'Nosus', 'Skyharbor' };
 
-bool EraseDatabase() {}
+bool RemoveDatabase() {}
 bool RestoreDatabase() {}
 
 class Animal {}
-class Alpaca {}
+class Machine {}
 ```
 
 **[⬆ back to top](#table-of-contents)**
@@ -168,16 +166,16 @@ class Alpaca {}
 </details>
 
 <details>
-  <summary><b>Use pronounceable names</b></summary>
+  <summary><b>Prefer Pronounceable Names</b></summary>
 
-It will take time to investigate the meaning of the variables and functions when they are not pronounceable.
+Time-consuming when variables and functions are not pronounceable, requiring investigation for understanding.
 
 ❌ **Bad:**
 
 ```csharp
 public class Employee
 {
-    public Datetime sWorkDate { get; set; } // what the heck is this
+    public string modBy { get; set; } // what the heck is this
     public Datetime modTime { get; set; } // same here
 }
 ```
@@ -187,7 +185,7 @@ public class Employee
 ```csharp
 public class Employee
 {
-    public Datetime StartWorkingDate { get; set; }
+    public string ModifiedBy { get; set; }
     public Datetime ModificationTime { get; set; }
 }
 ```
@@ -197,16 +195,16 @@ public class Employee
 </details>
 
 <details>
-  <summary><b>Use Camelcase notation</b></summary>
+  <summary><b>Camelcase notation</b></summary>
 
-Use [Camelcase Notation](https://en.wikipedia.org/wiki/Camel_case) for variable and method paramaters.
+Use CamelCase Notation for Variables and Method Parameters.
 
 ❌ **Bad:**
 
 ```csharp
-var employeephone;
+var employename;
 
-public double CalculateSalary(int workingdays, int workinghours)
+public double GetSalaryDetails(int employeecode, int salarymonth)
 {
     // some logic
 }
@@ -215,9 +213,9 @@ public double CalculateSalary(int workingdays, int workinghours)
 :white_check_mark: **Good:**
 
 ```csharp
-var employeePhone;
+var employeeName;
 
-public double CalculateSalary(int workingDays, int workingHours)
+public double GetSalaryDetails(int employeeCode, int salaryMonth)
 {
     // some logic
 }
@@ -230,7 +228,7 @@ public double CalculateSalary(int workingDays, int workingHours)
 <details>
   <summary><b>Use domain name</b></summary>
 
-People who read your code are also programmers. Naming things right will help everyone be on the same page. We don't want to take time to explain to everyone what a variable or function is for.
+Programmers, who read your code, benefit from appropriately named elements, as it promotes mutual understanding and eliminates the need for excessive explanations about variables or functions.
 
 **Good**
 
@@ -275,9 +273,9 @@ public static void main(String[] args)
 ## Variables
 
 <details>
-  <summary><b>Avoid nesting too deeply and return early</b></summary>
+  <summary><b>Avoid Deep Nesting and Early Returns</b></summary>
 
-Too many if else statements can make the code hard to follow. **Explicit is better than implicit**.
+Reduce Conditional Complexity: Excessive if-else statements can hinder code readability. Prioritize explicitness over implicitness.
 
 ❌ **Bad:**
 
@@ -386,9 +384,9 @@ public long Fibonacci(int n)
 </details>
 
 <details>
-  <summary><b>Avoid mental mapping</b></summary>
+  <summary><b>Minimize Mental Mapping</b></summary>
 
-Don’t force the reader of your code to translate what the variable means. **Explicit is better than implicit**.
+Strive to eliminate the need for readers to mentally map or decipher code elements. **Explicit is better**.
 
 ❌ **Bad:**
 
@@ -433,7 +431,9 @@ foreach (var location in locations)
 <details>
   <summary><b>Avoid magic string</b></summary>
 
-Magic strings are string values that are specified directly within application code that have an impact on the application’s behavior. Frequently, such strings will end up being duplicated within the system, and since they cannot automatically be updated using refactoring tools, they become a common source of bugs when changes are made to some strings but not others.
+ Magic strings are hardcoded string values within the application code that affect the behavior of the application. They often lead to duplication and can introduce bugs when not consistently updated during changes. Prefer using constants or enums instead for better maintainability and bug prevention.
+
+**Centralize Changes:** By making modifications in a centralized location, the rest of the codebase will automatically adjust accordingly, reducing the need for repetitive changes throughout the code.
 
 **Bad**
 
@@ -454,16 +454,14 @@ if (userRole == ADMIN_ROLE)
 }
 ```
 
-Using this we only have to change in centralize place and others will adapt it.
-
 **[⬆ back to top](#table-of-contents)**
 
 </details>
 
 <details>
-  <summary><b>Don't add unneeded context</b></summary>
+  <summary><b>Avoid Unnecessary Context</b></summary>
 
-If your class/object name tells you something, don't repeat that in your variable name.
+When the class or object name already provides relevant information, refrain from repeating it in the variable name.
 
 ❌ **Bad:**
 
@@ -496,7 +494,7 @@ public class Car
 </details>
 
 <details>
-  <summary><b>Use meaningful and pronounceable variable names</b></summary>
+  <summary><b>Utilize Descriptive and Pronounceable Variable Names</b></summary>
 
 ❌ **Bad:**
 
@@ -515,7 +513,7 @@ var currentDate = DateTime.UtcNow.ToString("MMMM dd, yyyy");
 </details>
 
 <details>
-  <summary><b>Use the same vocabulary for the same type of variable</b></summary>
+  <summary><b>Consistent Vocabulary for Variables of the Same Type</b></summary>
 
 ❌ **Bad:**
 
@@ -537,9 +535,9 @@ GetUser();
 </details>
 
 <details>
-  <summary><b>Use searchable names (part 1)</b></summary>
+  <summary><b>Prioritize Readable and Searchable Code</b></summary>
 
-We will read more code than we will ever write. It's important that the code we do write is readable and searchable. By _not_ naming variables that end up being meaningful for understanding our program, we hurt our readers. Make your names searchable.
+Since we spend more time reading code than writing it, it is crucial to prioritize code readability and searchability. Failing to name variables meaningfully can negatively impact readers' understanding. Ensure your variable names are easily searchable for better comprehension.
 
 ❌ **Bad:**
 
@@ -572,23 +570,16 @@ ser2.WriteObject(stream2, data);
 
 stream2.Position = 0;
 var sr2 = new StreamReader(stream2);
-Console.Write("JSON form of Data object: ");
+Console.Write("JSON of Data object: ");
 Console.WriteLine(sr2.ReadToEnd());
 ```
-
-**[⬆ Back to top](#table-of-contents)**
-
-</details>
-
-<details>
-  <summary><b>Use searchable names (part 2)</b></summary>
 
 ❌ **Bad:**
 
 ```csharp
 var data = new { Name = "Singh", Age = 42, PersonAccess = 4};
 
-// What the heck is 4 for?
+// What is 4 for?
 if (data.PersonAccess == 4)
 {
     // do edit ...
@@ -624,7 +615,7 @@ if (person.PersonAccess == PersonAccess.ACCESS_UPDATE)
 </details>
 
 <details>
-  <summary><b>Use explanatory variables</b></summary>
+  <summary><b>Explanatory Variables</b></summary>
 
 ❌ **Bad:**
 
@@ -659,26 +650,28 @@ if(cityGroup.Success == true && zipCodeGroup.Success == true)
 </details>
 
 <details>
-  <summary><b>Use default arguments instead of short circuiting or conditionals</b></summary>
+  <summary><b>Prefer Default Arguments Over Short-Circuiting or Conditionals</b></summary>
 
 **Not good:**
 
-This is not good because `breweryName` can be `NULL`.
+This approach has limitations as the variable `companyName` can potentially be `null`.
 
-This opinion is more understandable than the previous version, but it better controls the value of the variable.
+❌ **Bad:**
 
 ```csharp
-public void CreateMicrobrewery(string name = null)
+public void CreateCompany(string name = null)
 {
-    var breweryName = !string.IsNullOrEmpty(name) ? name : "XYZ Tech Co.";
+    var companyName = !string.IsNullOrEmpty(name) ? name : "XYZ Tech Co.";
     // ...
 }
 ```
 
+This approach enhances understanding and provides better control over variable values compared to the previous version.
+
 :white_check_mark: **Good:**
 
 ```csharp
-public void CreateMicrobrewery(string breweryName = "XYZ Tech Co.")
+public void CreateCompany(string companyName = "XYZ Tech Co.")
 {
     // ...
 }
